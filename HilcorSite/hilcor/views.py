@@ -145,7 +145,7 @@ def request_quote(request):
 
     number_products = len(Product.objects.filter(availability = True))
 
-    FormsetRequestProductInQuote = formset_factory(FormRequestProductInQuote, extra= number_products)
+    FormsetRequestProductInQuote = formset_factory(FormRequestProductInQuote, extra=number_products)
 
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -219,19 +219,19 @@ def edit_quote(request, id):
             quote.answer_date = datetime.today()
             quote.save()
             for product_form in product_formset:
+                if product_form.is_valid() and product_form.has_changed():
+                    product = product_form.cleaned_data.get('product', product_form.initial['product'])
+                    quantity = product_form.cleaned_data.get('quantity', product_form.initial['quantity'])
+                    measure = product_form.cleaned_data.get('measure', product_form.initial['measure'])
+                    price_p_u = product_form.cleaned_data.get('price_p_u', product_form.initial['price_p_u'])
+                    total_price = product_form.cleaned_data.get('total_price', product_form.initial['total_price'])
 
-                product = product_form.cleaned_data.get('product', product_form.initial['product'])
-                quantity = product_form.cleaned_data.get('quantity', product_form.initial['quantity'])
-                measure = product_form.cleaned_data.get('measure', product_form.initial['measure'])
-                price_p_u = product_form.cleaned_data.get('price_p_u', product_form.initial['price_p_u'])
-                total_price = product_form.cleaned_data.get('total_price', product_form.initial['total_price'])
-
-                prod_obj = ProductInQuote.objects.get(product = product, quote = quote)
-                prod_obj.quantity = quantity
-                prod_obj.measure = measure
-                prod_obj.price_p_u = price_p_u
-                prod_obj.total_price = total_price
-                prod_obj.save()
+                    prod_obj = ProductInQuote.objects.get(product = product, quote = quote)
+                    prod_obj.quantity = quantity
+                    prod_obj.measure = measure
+                    prod_obj.price_p_u = price_p_u
+                    prod_obj.total_price = total_price
+                    prod_obj.save()
 
             return HttpResponseRedirect('/quotes/')
 
@@ -248,6 +248,7 @@ def cancel_quote(request, id):
     quote.status = 'C'
     quote.save()
     return HttpResponseRedirect('/quotes/')
+
 @login_required
 def send_quote(request, id):
     quote    = Quote.objects.get(id = id)
@@ -295,24 +296,54 @@ def download(request, file_name):
     return response
 
 def view_consult(request, id):
+
+    # Loading quote and products
     quote = Quote.objects.get(id = id)
     products = ProductInQuote.objects.filter(quote = quote)
 
-    if request.method == 'POST':
-        form = FormAddPurchaseOrder(request.POST, request.FILES)
-        if form.is_valid():
-            file_ob = form.save()
-            file_ob.quote = quote
-            file_ob.save()
-
+    # Loading Purchase Order (if any)
     po_file = PurchaseOrder.objects.filter(quote = quote)
     if po_file.exists():
         po_file = po_file[0]
         has_po  = True
     else:
-        po_file = FormAddPurchaseOrder()
+        po_file = FormAddPurchaseOrder(prefix='PO')
         has_po  = False
 
+    # Loading Purchase invoice (if any)
+    invoice = Invoice.objects.filter(quote = quote)
+    if invoice.exists():
+        invoice = invoice[0]
+        has_in  = True
+
+        vouchers   = Payment.objects.filter(invoice=invoice)
+
+    else:
+        invoice  = None
+        has_in   = False
+        vouchers = False
+
+    form_vo = FormPayment(prefix='VO')
+
+    # Proccessing forms
+    if request.method == 'POST':
+        if 'PO' in request.POST:
+            form = FormAddPurchaseOrder(request.POST, request.FILES, prefix='PO')
+            if form.is_valid():
+                file_ob = form.save()
+                file_ob.quote = quote
+                file_ob.save()
+        if 'VO' in request.POST:
+            print('HIEE')
+            form = FormPayment(request.POST, request.FILES, prefix='VO')
+            if form.is_valid():
+                file_ob = form.save()
+                file_ob.invoice = invoice
+                file_ob.save()
+
+        return HttpResponseRedirect('/consult/%i/'%(quote.id))
+
+    # Returning Template
 
     template = loader.get_template('view_consult.html')
     context = {
@@ -321,6 +352,10 @@ def view_consult(request, id):
         'products' : products,
         'form_po'  : po_file,
         'has_po'   : has_po,
+        'invoice'  : invoice,
+        'has_in'   : has_in,
+        'vouchers' : vouchers,
+        'form_vo'  : form_vo
     }
     return HttpResponse(template.render(context, request))
 
@@ -336,13 +371,177 @@ def payment_orders(request):
 
 @login_required
 def invoices(request):
-
+    invoices = Invoice.objects.all().exclude(status='B') 
     template = loader.get_template('invoices.html')
     context = {
         'Greetings': 'Bienvenido',
+        'in_list'  :  invoices
     }
     return HttpResponse(template.render(context, request))
+
+@login_required
+def create_invoice(request, id):
+
+    invoice = Invoice.objects.filter(quote = id)
+
+    if invoice.exists():
+        invoice = invoice[0]
+    else:
+        quote   = Quote.objects.get(id=id)
+        if quote.company != '':
+            business_name = quote.company
+        else:
+            quote.company = contact
+
+        invoice = Invoice.objects.create(quote = quote, 
+                                         number = get_invoice_number(), 
+                                         business_name = business_name,
+                                         address = quote.address,
+                                         phone = quote.phone)
     
+    return HttpResponseRedirect('/invoices/edit/%i/'%(invoice.id))
+
+@login_required
+def edit_invoice(request, id):
+    invoice    = Invoice.objects.get(id = id)
+    products   = ProductInInvoice.objects.filter(invoice=invoice)
+
+    initial_products = []
+    for product in products:
+        initial_products.append(
+            {"product" : product.product,
+             "quantity" : product.quantity, 
+             "measure" :product.measure, 
+             "price_p_u" :product.price_p_u,
+             "total_price" : product.total_price,
+             "code" : product.code,
+             "order_number" : product.order_number}
+            )
+
+    number_products = len(products) + 2
+    FormsetEditProductInInvoice = formset_factory(FormEditProductInInvoice, extra = number_products, max_num = number_products)
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = FormInvoice(request.POST, instance = invoice)
+        product_formset = FormsetEditProductInInvoice(request.POST, initial=initial_products)
+        # check whether it's valid:
+        if form.is_valid() and product_formset.is_valid():
+            pass
+
+            invoice = form.save(commit=False)
+            invoice.save()
+
+            for product_form in product_formset:
+                if product_form.is_valid() and product_form.has_changed():
+
+                    product = product_form.cleaned_data.get('product', '')
+                    quantity = product_form.cleaned_data.get('quantity', '')
+                    measure = product_form.cleaned_data.get('measure', '')
+                    price_p_u = product_form.cleaned_data.get('price_p_u', '')
+                    total_price = product_form.cleaned_data.get('total_price', '')
+                    code = product_form.cleaned_data.get('code', '')
+                    order_number = product_form.cleaned_data.get('order_number', '')
+
+                    prod_obj = ProductInInvoice.objects.filter(invoice=invoice, product=product, order_number=order_number)
+                    if prod_obj.exists():
+                        prod_obj = prod_obj[0]
+                        prod_obj.quantity = quantity
+                        prod_obj.measure = measure
+                        prod_obj.price_p_u = price_p_u
+                        prod_obj.total_price = total_price
+                        prod_obj.code = code
+                        prod_obj.order_number = order_number
+                        prod_obj.save()
+                    else:
+                        ProductInInvoice.objects.create(
+                            invoice=invoice, 
+                            product=product, 
+                            order_number=order_number,
+                            quantity = quantity,
+                            measure = measure,
+                            price_p_u = price_p_u,
+                            total_price = total_price,
+                            code = code
+                            )
+
+            return HttpResponseRedirect('/paymentorders/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = FormInvoice(instance = invoice)
+        product_formset = FormsetEditProductInInvoice(initial = initial_products)
+
+    return render(request, 'edit_invoice.html', {'form': form, 'invoice' : invoice, 'product_formset' : product_formset})
+
+@login_required
+def cancel_invoice(request, id):
+    invoice    = Invoices.objects.get(id = id)
+    invoice.status = 'C'
+    invoice.save()
+    return HttpResponseRedirect('/invoices/')
+    
+@login_required
+def send_invoice(request, id):
+    quote        = Quote.objects.get(id = id)
+    quote.status = 'E'
+    quote.save()
+
+    invoice        = Invoice.objects.get(quote = quote)
+    invoice.status = 'P'
+    invoice.save()
+    invoice_sent(invoice.id)
+    return HttpResponseRedirect('/invoices/')
+
+@login_required
+def payment_types(request):
+    payment_types_list = PaymentType.objects.all() 
+    template = loader.get_template('payment_types.html')
+    context  = {
+        'Greetings': 'Bienvenido',
+        'payment_types_list'  : payment_types_list
+    }
+    return HttpResponse(template.render(context, request))
+
+@login_required
+def add_payment_type(request):
+      # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = FormPaymentType(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            payment_type = form.save(commit=False)
+            payment_type.save()
+            return HttpResponseRedirect('/paymenttypes')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = FormPaymentType()
+
+    return render(request, 'add_payment_type.html', {'form': form})
+
+@login_required
+def edit_payment_type(request, id):
+
+    payment_type = PaymentType.objects.get(id=id)
+
+      # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = FormPaymentType(request.POST, instance = payment_type)
+        # check whether it's valid:
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/paymenttypes')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = FormPaymentType(instance=payment_type)
+
+    return render(request, 'edit_payment_type.html', {'form': form})
+
 @login_required
 def reports(request):
     template = loader.get_template('reports.html')

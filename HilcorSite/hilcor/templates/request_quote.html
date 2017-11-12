@@ -69,30 +69,36 @@
 						</strong>
 					</p>
 				{% endif %}
-				<form method="POST" role="form" class="">
-					<div class="col-md-6">
-						{% csrf_token %}
-			            {{ form | bootstrap }}
-		        	</div>
-		        	<div class="col-md-6">
+				<div class='row'>
+					<div class="5u skel-cell-important">
+					<h4>Datos Personales</h4>
+					<form method="POST" role="form">
+							{% csrf_token %}
+				            {{ form | bootstrap }}
+			        </div>
+			        <div class="2u skel-cell-important">
+			        </div>
+		        	<div class="5u skel-cell-important">
+		        		<h4>Productos</h4>
 						{{ product_formset.management_form }}
 						{% for form in product_formset %}
 						  {{ form | bootstrap}}
+						  <hr class="hr-red">
 						{% endfor %}
-					</div>
-					<a href="{% url 'products' %}">
-						<button style="float:center;" type="button" class="btn btn-secondary">
-							<i class="fa fa-times" aria-hidden="true"></i> 
-							Cancelar
+						<a href="{% url 'products' %}">
+							<button style="float:center;" type="button" class="btn btn-secondary">
+								<i class="fa fa-times" aria-hidden="true"></i> 
+								Cancelar
+							</button>
+						</a>
+
+					    <button style="float:center;" type="submit" class="btn btn-danger">
+							<i class="fa fa-plus" aria-hidden="true"></i> 
+							Solicitar Cotización
 						</button>
-					</a>
-
-				    <button style="float:center;" type="submit" class="btn btn-danger">
-						<i class="fa fa-plus" aria-hidden="true"></i> 
-						Solicitar Cotización
-					</button>
-
-		    	</form>
+			    	</form>	
+			    	</div>
+				</div>
 			</div>
 		</div>
 	<!-- Main -->

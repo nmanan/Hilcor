@@ -12,13 +12,18 @@ def get_quote_number():
 	today = datetime.today()
 	return str(today.day) + str(today.month) + str(today.year)[2:] + '-' +str(today.hour) + str(today.minute)
 
+def get_invoice_number():
+    today      = datetime.today()
+    n_invoices = str(Invoice.objects.count() + 1)
+    serial     = '0000'
+    serial     = serial[len(n_invoices):] + n_invoices
+    return str(today.year)[2:] + '-' + serial
 
 ################################################################################
 #                                     EMAIL                                    #
 ################################################################################
 def successfully_sent_quote(quote):
     quote  = Quote.objects.get(id = quote)
-    print(str(quote.number))
     send_mail(
         '[Hilcor] Su cotizacion ha sido enviada.',
         'Saludos, '+ quote.contact +'. Su cotizacion ha sido enviada satisfactoriamente.\n' +
@@ -28,20 +33,15 @@ def successfully_sent_quote(quote):
         fail_silently=False,
     )
 
-def new_user_email(user, password):
-    user  = User.objects.get(username = user)
-    user_name = str(user.first_name) + " " + str(user.last_name)
+def invoice_sent(invoice):
+    invoice  = Invoice.objects.get(id = invoice)
     send_mail(
-        '[INEA TUGS] Bienvenido a INEA TUGS',
-        'Hola, ' + user_name +'. Bienvenido a INEA TUGS. Un administrador te ha creado una cuenta para que puedas ingresar al sistema \n' +
-        'Estos son tus datos de acceso: \n\n' +
-        'Usuario: '+ user.username + '\n' +
-        'Correo Electrónico: '+ user.email +' \n' +
-        'Contraseña: '+ password +'\n\n' +
-        'Ten en cuenta que la contraseña fue generada por el administrador. ' +
-        'Recuerda cambiarla por una que recuerdes más fácilmente al ingresar al sistema.',
-        'noreply@ineatugs.com',
-        [user.email],
+        '[Hilcor] Su factura esta lista.',
+        'Saludos, '+ invoice.business_name +'. Su factura asociada a la cotizacion ' + str(invoice.quote.number) + ' ya se encuentra disponible.\n' +
+        'Numero de Factura: \n' +str(invoice.number) + '.\n' +
+        'Usted puede descargar la factura en el area de consultas usando el numero de su cotizacion.',
+        'noeply@hilcor.com',
+        [invoice.quote.email],
         fail_silently=False,
     )
 

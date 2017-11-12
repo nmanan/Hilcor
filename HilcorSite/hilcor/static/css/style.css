@@ -12,6 +12,19 @@
 /* Basic                                                                         */
 /*********************************************************************************/
 
+	.container-2 {
+		margin: 3%;
+	}
+
+	.hr-red {
+		display: block;
+	    height: 1px;
+	    border: 0;
+	    border-top: 2px solid #d21717;
+	    margin: 1em 0;
+	    padding: 0;
+	}
+
 	body
 	{
 		background: #111111 url(images/main-wrapper-bg.jpg) repeat;

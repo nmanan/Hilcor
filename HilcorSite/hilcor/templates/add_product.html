@@ -3,7 +3,7 @@
 {% load bootstrap %}
 <html>
 	<head>
-		<title>Administración | Hilandería Hilcor </title>
+		<title>Agregar Producto | Hilandería Hilcor </title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
@@ -24,7 +24,7 @@
 
 		<!-- Header -->
 			<div id="header">
-				<div class="container">
+				<div class="container-2">
 						
 					<!-- Logo -->
 						<div id="logo">
@@ -71,10 +71,11 @@
 							</header>
 							<ul class="default">
 								<li><a href="{% url 'products' %}">Administrar Productos</a></li>
-								<li><a href="#">Cotizaciones</a></li>
-								<li><a href="#">Órdenes de Compra</a></li>
-								<li><a href="#">Facturas</a></li>
-								<li><a href="#">Reportes</a></li>
+								<li><a href="{% url 'quotes' %}">Cotizaciones</a></li>
+								<li><a href="{% url 'payment_orders' %}">Órdenes de Compra</a></li>
+								<li><a href="{% url 'invoices' %}">Facturas</a></li>
+								<li><a href="{% url 'payment_types' %}">Métodos de Pago</a></li>
+								<li><a href="{% url 'reports' %}">Reportes</a></li>
 							</ul>
 						</section>
 					</div>

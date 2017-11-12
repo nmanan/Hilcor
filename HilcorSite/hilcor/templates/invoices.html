@@ -60,7 +60,7 @@
 
 	<!-- Main -->
 		<div id="main">
-			<div class="container">
+			<div class="container-2">
 				<div class="row">
 		
 					<div class="3u">
@@ -73,6 +73,7 @@
 								<li><a href="{% url 'quotes' %}">Cotizaciones</a></li>
 								<li><a href="{% url 'payment_orders' %}">Órdenes de Compra</a></li>
 								<li><a href="{% url 'invoices' %}">Facturas</a></li>
+								<li><a href="{% url 'payment_types' %}">Métodos de Pago</a></li>
 								<li><a href="{% url 'reports' %}">Reportes</a></li>
 							</ul>
 						</section>
@@ -87,36 +88,38 @@
 							<table class="table table-bordered">
 							  <thead>
 							    <tr>
-							      <th>Fecha Solicitud</th>
-							      <th>Empresa</th>
-							      <th>Persona de Contacto</th>
+							      <th>Estado</th>
+							      <th>Número</th>
+							      <th>Fecha</th>
+							      <th>Razón Social</th>
 							      <th>Teléfono</th>
-							      <th>Procesar</th>
-							      <th>Enviar</th>
+							      <th>Ver</th>
+							      <th>Aprobar</th>
 							      <th>Cancelar</th>
 							    </tr>
 							  </thead>
 							  <tbody>
-								{% if quote_list %}
-								    {% for quote in quote_list %}
+								{% if in_list %}
+								    {% for invoice in in_list %}
 								    <tr>
-								      <td>{{ quote.request_date }}</td>
-								      <td>{{ quote.company }}</td>
-								      <td>{{ quote.contact }}</td>
-								      <td>{{ quote.phone }}</td>
+								      <td>{{ invoice.status }}</td>
+								      <td>{{ invoice.number }}</td>
+								      <td>{{ invoice.date }}</td>
+								      <td>{{ invoice.business_name }}</td>
+								      <td>{{ invoice.phone }}</td>
 								      <td>
-								      	<a href="{% url 'edit_quote' quote.id %}">
-								      		<i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+								      	<a href="{% url 'edit_quote' invoice.id %}">
+								      		<i class="fa fa-eye" aria-hidden="true"></i>
 								      	</a>
 								      </td>
 								      <td>
-										<a href="{% url 'send_quote' quote.id %}"
+										<a href="{% url 'send_quote' invoice.id %}"
 								      	   onclick="return confirm('¿Está seguro que desea enviar esta cotización?')">
-								      		<i class="fa fa-arrow-right" aria-hidden="true"></i>
+								      		<i class="fa fa-check" aria-hidden="true"></i>
 								      	</a>
 								      </td>
 								      <td>
-								      	<a href="{% url 'cancel_quote' quote.id %}"
+								      	<a href="{% url 'cancel_quote' invoice.id %}"
 								      	   onclick="return confirm('¿Está seguro que desea cancelar esta cotización?')">
 								      		<i class="fa fa-ban" aria-hidden="true"></i>
 								      	</a>
@@ -124,7 +127,7 @@
 								    </tr>
 								    {% endfor %}
 								{% else %}
-								    <tr><td>No hay cotizaciones disponibles.</td></tr>
+								    <tr><td>No hay facturas disponibles.</td></tr>
 								{% endif %}
 							  </tbody>
 							</table>

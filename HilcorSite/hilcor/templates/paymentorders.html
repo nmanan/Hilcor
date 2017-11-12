@@ -60,7 +60,7 @@
 
 	<!-- Main -->
 		<div id="main">
-			<div class="container">
+			<div class="container-2">
 				<div class="row">
 		
 					<div class="3u">
@@ -73,6 +73,7 @@
 								<li><a href="{% url 'quotes' %}">Cotizaciones</a></li>
 								<li><a href="{% url 'payment_orders' %}">Órdenes de Compra</a></li>
 								<li><a href="{% url 'invoices' %}">Facturas</a></li>
+								<li><a href="{% url 'payment_types' %}">Métodos de Pago</a></li>
 								<li><a href="{% url 'reports' %}">Reportes</a></li>
 							</ul>
 						</section>
@@ -110,12 +111,12 @@
 								      	</a>
 								      </td>
 								      <td>
-								      	<a href="#">
+								      	<a href="{% url 'create_invoice' po.quote.id %}">
 								      		<i class="fa fa-file-text-o" aria-hidden="true"></i>
 								      	</a>
 								      </td>
 								      <td>
-										<a href="#"
+										<a href="{% url 'send_invoice' po.quote.id %}"
 								      	   onclick="return confirm('¿Está seguro que desea enviar esta facturación?')">
 								      		<i class="fa fa-arrow-right" aria-hidden="true"></i>
 								      	</a>
@@ -123,7 +124,7 @@
 								    </tr>
 								    {% endfor %}
 								{% else %}
-								    <tr><td>No hay Ordenes de Pago pendientes.</td></tr>
+								    <tr><td>No hay Órdenes de Compra pendientes.</td></tr>
 								{% endif %}
 							  </tbody>
 							</table>
