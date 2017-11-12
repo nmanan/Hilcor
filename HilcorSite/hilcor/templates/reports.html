@@ -2,7 +2,7 @@
 {% load static %}
 <html>
 	<head>
-		<title>Administración | Productos | Hilandería Hilcor </title>
+		<title>Administración | Reportes | Hilandería Hilcor </title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
@@ -81,56 +81,53 @@
 					<div class="9u skel-cell-important">
 						<section>
 							<header>
-								<h2>Productos</h2>
-								<span>Modificar, agregar o eliminar disponibilidad de productos.</span>
+								<h2>Cotizaciones </h2>
+								<span>Consultar, llenar y enviar cotizaciones para pedidos de productos.</span>
 							</header>
 							<table class="table table-bordered">
 							  <thead>
 							    <tr>
-							      <th>Producto</th>
-							      <th>Descripción</th>
-							      <th>Disponibilidad</th>
-							      <th></th>
-							      <th></th>
+							      <th>Fecha Solicitud</th>
+							      <th>Empresa</th>
+							      <th>Persona de Contacto</th>
+							      <th>Teléfono</th>
+							      <th>Procesar</th>
+							      <th>Enviar</th>
+							      <th>Cancelar</th>
 							    </tr>
 							  </thead>
 							  <tbody>
-								{% if product_list %}
-								    {% for product in product_list %}
+								{% if quote_list %}
+								    {% for quote in quote_list %}
 								    <tr>
-								      <td>{{ product.name }}</td>
-								      <td>{{ product.description }}</td>
+								      <td>{{ quote.request_date }}</td>
+								      <td>{{ quote.company }}</td>
+								      <td>{{ quote.contact }}</td>
+								      <td>{{ quote.phone }}</td>
 								      <td>
-								      	{% if product.availability %}
-								      		<i class="fa fa-check" aria-hidden="true"></i>
-								        {% else %}
-								      		<i class="fa fa-ban" aria-hidden="true"></i>
-								      	{% endif %}
-								      </td>
-								      <td>
-								      	<a href="{% url 'edit_product' product.id %}">
-								      		<i class="fa fa-pencil-square-o" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Editar Producto"></i>
+								      	<a href="{% url 'edit_quote' quote.id %}">
+								      		<i class="fa fa-pencil-square-o" aria-hidden="true"></i>
 								      	</a>
 								      </td>
 								      <td>
-								      	<a href="{% url 'delete_product' product.id %}" 
-								      	   onclick="return confirm('¿Está seguro que desea eliminar este producto?')">
-								      		<i class="fa fa-times" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Eliminar Producto"></i>
+										<a href="{% url 'send_quote' quote.id %}"
+								      	   onclick="return confirm('¿Está seguro que desea enviar esta cotización?')">
+								      		<i class="fa fa-arrow-right" aria-hidden="true"></i>
+								      	</a>
+								      </td>
+								      <td>
+								      	<a href="{% url 'cancel_quote' quote.id %}"
+								      	   onclick="return confirm('¿Está seguro que desea cancelar esta cotización?')">
+								      		<i class="fa fa-ban" aria-hidden="true"></i>
 								      	</a>
 								      </td>
 								    </tr>
 								    {% endfor %}
 								{% else %}
-								    <tr><td>No hay productos disponibles.</td></tr>
+								    <tr><td>No hay cotizaciones disponibles.</td></tr>
 								{% endif %}
 							  </tbody>
 							</table>
-							<a href="{% url 'add_product' %}">
-								<button style="float:right;" type="button" class="btn btn-danger">
-									<i class="fa fa-plus" aria-hidden="true"></i> 
-									Agregar Producto
-								</button>
-							</a>
 						</section>
 					</div>
 					

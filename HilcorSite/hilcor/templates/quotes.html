@@ -2,7 +2,7 @@
 {% load static %}
 <html>
 	<head>
-		<title>Administración | Hilandería Hilcor </title>
+		<title>Administración | Cotizaciones | Hilandería Hilcor </title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
@@ -71,9 +71,9 @@
 							<ul class="default">
 								<li><a href="{% url 'products' %}">Administrar Productos</a></li>
 								<li><a href="{% url 'quotes' %}">Cotizaciones</a></li>
-								<li><a href="#">Órdenes de Pago</a></li>
-								<li><a href="#">Facturas</a></li>
-								<li><a href="#">Reportes</a></li>
+								<li><a href="{% url 'payment_orders' %}">Órdenes de Compra</a></li>
+								<li><a href="{% url 'invoices' %}">Facturas</a></li>
+								<li><a href="{% url 'reports' %}">Reportes</a></li>
 							</ul>
 						</section>
 					</div>
@@ -87,37 +87,40 @@
 							<table class="table table-bordered">
 							  <thead>
 							    <tr>
+							      <th>Estado</th>
+							      <th>Número</th>
 							      <th>Fecha Solicitud</th>
-							      <th>Empresa</th>
 							      <th>Persona de Contacto</th>
 							      <th>Teléfono</th>
-							      <th>Procesar</th>
-							      <th>Enviar</th>
-							      <th>Cancelar</th>
+							      <th></th>
+							      <th></th>
+							      <th></th>
 							    </tr>
 							  </thead>
 							  <tbody>
 								{% if quote_list %}
 								    {% for quote in quote_list %}
 								    <tr>
+								      <td>{{ quote.status }}</td>
+								      <td>{{ quote.number }}</td>
 								      <td>{{ quote.request_date }}</td>
-								      <td>{{ quote.company }}</td>
 								      <td>{{ quote.contact }}</td>
 								      <td>{{ quote.phone }}</td>
 								      <td>
 								      	<a href="{% url 'edit_quote' quote.id %}">
-								      		<i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+								      		<i class="fa fa-pencil-square-o" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Editar Cotización"></i>
 								      	</a>
 								      </td>
 								      <td>
-								      	<a href="#">
-								      		<i class="fa fa-arrow-right" aria-hidden="true"></i>
+										<a href="{% url 'send_quote' quote.id %}"
+								      	   onclick="return confirm('¿Está seguro que desea enviar esta cotización?')">
+								      		<i class="fa fa-arrow-right" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Enviar Cotización"></i>
 								      	</a>
 								      </td>
 								      <td>
-								      	<a href="#" 
-								      	   onclick="return confirm('¿Está seguro que desea eliminar este producto?')">
-								      		<i class="fa fa-ban" aria-hidden="true"></i>
+								      	<a href="{% url 'cancel_quote' quote.id %}"
+								      	   onclick="return confirm('¿Está seguro que desea cancelar esta cotización?')">
+								      		<i class="fa fa-ban" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Cancelar Cotización"></i>
 								      	</a>
 								      </td>
 								    </tr>
@@ -137,9 +140,17 @@
 	<!-- Copyright -->
 		<div id="copyright">
 			<div class="container">
+				{% if user.is_authenticated %}
+					<a href="{% url 'dashboard' %}"> Administración </a>  | 
+					<a href="{% url 'logout' %}">Cerrar Sesión</a>
+				{%else%}
+					<a href="{% url 'access' %}"> Iniciar Sesión </a> 
+				{% endif %}
+				<p></p>
+				<p>
+					Copyright © 2017 | Hilandería Hilcor C.A.  RIF: J-29395972-1. Avenida Los Pioneros, Edficio Hilcor. Zona Industrial de Araure, estado Portuguesa. Teléfonos 664.51.08 /621.58.78. Email hilanderia.hilcor@hotmail.com
+				</p>
 			</div>
 		</div>
-
-
 	</body>
 </html>

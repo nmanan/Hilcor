@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django  import forms
 from .models import *
 
@@ -30,3 +31,11 @@ class FormEditProductInQuote(forms.ModelForm):
 	class Meta:
 		model  = ProductInQuote
 		fields = ("product", "quantity", "measure", "price_p_u","total_price")
+
+class FormConsult(forms.Form):
+	number = forms.CharField(label='Número', max_length=12)
+
+class FormAddPurchaseOrder(forms.ModelForm):
+	class Meta:
+		model = PurchaseOrder
+		fields = ("po_file",)

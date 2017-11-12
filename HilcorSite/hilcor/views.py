@@ -5,9 +5,10 @@ from django.http         import HttpResponse, HttpResponseRedirect
 from django.template     import loader
 from django.contrib.auth.decorators import login_required
 from django.forms.formsets import formset_factory
-from .models import *
-from .forms import *
-from datetime import datetime
+from hilcor.models import *
+from hilcor.forms  import *
+from hilcor.utils  import *
+from datetime      import datetime
 
 # Create your views here.
 def index(request):
@@ -18,12 +19,31 @@ def index(request):
     }
     return HttpResponse(template.render(context, request))
 
+def us(request):
+    product_list = Product.objects.all()[:3]
+    template = loader.get_template('us.html')
+    context = {
+        'product_list': product_list,
+    }
+    return HttpResponse(template.render(context, request))
+
+def contact(request):
+    product_list = Product.objects.all()[:3]
+    template = loader.get_template('contact.html')
+    context = {
+        'product_list': product_list,
+    }
+    return HttpResponse(template.render(context, request))
 
 def access(request):
     template = loader.get_template('access.html')
     context = {
-        'Greetings': 'Holaddewwfefw',
+        'Greetings': 'Bienvenido',
     }
+
+    if request.user.is_authenticated():
+        return HttpResponseRedirect('dashboard')
+
     return HttpResponse(template.render(context, request))
 
 def log_in(request):
@@ -136,11 +156,16 @@ def request_quote(request):
         if form.is_valid() and product_formset.is_valid():
             quote = form.save(commit=False)
             quote.request_date = datetime.today()
+            quote.number       = get_quote_number()
             quote.save()
             for product_form in product_formset:
-                product = product_form.save(commit=False)
-                product.quote = quote
-                product.save()
+                if product_form.is_valid() and product_form.has_changed():
+                    product = product_form.save(commit=False)
+                    product.quote = quote
+                    product.save()
+
+            # Send email to user
+            successfully_sent_quote(quote.id)
 
             return HttpResponseRedirect('/quotes/thanks/')
 
@@ -165,6 +190,7 @@ def quotes(request):
     }
     return HttpResponse(template.render(context, request))
 
+@login_required
 def edit_quote(request, id):
 
     quote    = Quote.objects.get(id = id)
@@ -205,7 +231,7 @@ def edit_quote(request, id):
                 prod_obj.measure = measure
                 prod_obj.price_p_u = price_p_u
                 prod_obj.total_price = total_price
-                product.save()
+                prod_obj.save()
 
             return HttpResponseRedirect('/quotes/')
 
@@ -216,3 +242,111 @@ def edit_quote(request, id):
 
     return render(request, 'edit_quote.html', {'form': form, 'product_formset' : product_formset })
 
+@login_required
+def cancel_quote(request, id):
+    quote    = Quote.objects.get(id = id)
+    quote.status = 'C'
+    quote.save()
+    return HttpResponseRedirect('/quotes/')
+@login_required
+def send_quote(request, id):
+    quote    = Quote.objects.get(id = id)
+    quote.status = 'A'
+    quote.save()
+    return HttpResponseRedirect('/quotes/')
+
+def consult(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+         # create a form instance and populate it with data from the request:
+        form = FormConsult(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            number = form.cleaned_data.get('number','')
+            quote = Quote.objects.filter(number = number)
+            if quote.exists():
+                quote = quote[0]
+                return HttpResponseRedirect('/consult/%i/'%(quote.id))
+            else:
+                template = loader.get_template('consult.html')
+                context = {
+                    'Greetings': 'Bienvenido',
+                    'form' : form,
+                    'error_message' : 'No existe cotización/pedido con el número ingresado.'
+                }
+                return HttpResponse(template.render(context, request))
+    else:
+        template = loader.get_template('consult.html')
+        form = FormConsult()
+        context = {
+            'Greetings': 'Bienvenido',
+            'form' : form
+        }
+    return HttpResponse(template.render(context, request))
+
+def download(request, file_name):
+    file_path = settings.MEDIA_ROOT + '/' + file_name
+    file_wrapper = FileWrapper(file(file_path,'rb'))
+    file_mimetype = mimetypes.guess_type(file_path)
+    response = HttpResponse(file_wrapper, content_type=file_mimetype )
+    response['X-Sendfile'] = file_path
+    response['Content-Length'] = os.stat(file_path).st_size
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
+    return response
+
+def view_consult(request, id):
+    quote = Quote.objects.get(id = id)
+    products = ProductInQuote.objects.filter(quote = quote)
+
+    if request.method == 'POST':
+        form = FormAddPurchaseOrder(request.POST, request.FILES)
+        if form.is_valid():
+            file_ob = form.save()
+            file_ob.quote = quote
+            file_ob.save()
+
+    po_file = PurchaseOrder.objects.filter(quote = quote)
+    if po_file.exists():
+        po_file = po_file[0]
+        has_po  = True
+    else:
+        po_file = FormAddPurchaseOrder()
+        has_po  = False
+
+
+    template = loader.get_template('view_consult.html')
+    context = {
+        'Greetings': 'Bienvenido',
+        'quote' : quote,
+        'products' : products,
+        'form_po'  : po_file,
+        'has_po'   : has_po,
+    }
+    return HttpResponse(template.render(context, request))
+
+@login_required
+def payment_orders(request):
+    paymentorders = PurchaseOrder.objects.filter(quote__status = 'A') 
+    template = loader.get_template('paymentorders.html')
+    context  = {
+        'Greetings': 'Bienvenido',
+        'po_list'  : paymentorders
+    }
+    return HttpResponse(template.render(context, request))
+
+@login_required
+def invoices(request):
+
+    template = loader.get_template('invoices.html')
+    context = {
+        'Greetings': 'Bienvenido',
+    }
+    return HttpResponse(template.render(context, request))
+    
+@login_required
+def reports(request):
+    template = loader.get_template('reports.html')
+    context = {
+        'Greetings': 'Bienvenido',
+    }
+    return HttpResponse(template.render(context, request))

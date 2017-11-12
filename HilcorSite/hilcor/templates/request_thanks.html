@@ -33,11 +33,11 @@
 					<!-- Nav -->
 						<nav id="nav">
 							<ul>
-								<li><a href="index.html">Inicio</a></li>
-								<li><a href="left-sidebar.html">Nosotros</a></li>
-								<li class="active"><a href="left-sidebar.html">Productos</a></li>
-								<li><a href="right-sidebar.html">Contacto</a></li>
-								<li><a href="no-sidebar.html">Consultar</a></li>
+								<li><a href="{% url 'index' %}">Inicio</a></li>
+								<li><a href="{% url 'us' %}">Nosotros</a></li>
+								<li class="active"><a href="{% url 'our_products' %}">Productos</a></li>
+								<li><a href="{% url 'contact' %}">Contacto</a></li>
+								<li><a href="{% url 'consult' %}">Consultar</a></li>
 							</ul>
 						</nav>
 	
@@ -61,7 +61,7 @@
 					<div class="9u skel-cell-important">
 						<section>
 							<header>
-								<h2> Gracias por solicitar su Cotización </h2>
+								<h2> Gracias por solicitar una nueva Cotización </h2>
 								<span> 
 									Dentro de poco recibirá un correo con el código de seguimiento de su cotización.
 								</span>
@@ -79,6 +79,16 @@
 	<!-- Copyright -->
 		<div id="copyright">
 			<div class="container">
+				{% if user.is_authenticated %}
+					<a href="{% url 'dashboard' %}"> Administración </a>  | 
+					<a href="{% url 'logout' %}">Cerrar Sesión</a>
+				{%else%}
+					<a href="{% url 'access' %}"> Iniciar Sesión </a> 
+				{% endif %}
+				<p></p>
+				<p>
+					Copyright © 2017 | Hilandería Hilcor C.A.  RIF: J-29395972-1. Avenida Los Pioneros, Edficio Hilcor. Zona Industrial de Araure, estado Portuguesa. Teléfonos 664.51.08 /621.58.78. Email hilanderia.hilcor@hotmail.com
+				</p>
 			</div>
 		</div>
 	</body>

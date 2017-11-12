@@ -1,23 +1,21 @@
-<!DOCTYPE HTML>
 {% load static %}
 {% load bootstrap %}
-
+<!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Solicitar Cotización | Hilandería Hilcor </title>
+		<title>Acceso | Hilandería Hilcor</title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
 		<link href='http://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900' rel='stylesheet' type='text/css'>
-		<!--[if lte IE 8]><script src="js/html5shiv.js"></script><![endif]-->
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 		<script src="{% static 'js/skel.min.js' %}"></script>
 		<script src="{% static 'js/skel-panels.min.js' %}"></script>
 		<script src="{% static 'js/init.js' %}"></script>
-		<script src="{% static 'js/bootstrap.js' %}"></script>
 		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/style-desktop.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+		<script src="{% static 'js/bootstrap.js' %}"></script>
 	</head>
 	<body>
 
@@ -31,15 +29,15 @@
 						<div id="logo">
 							<a href="{% url 'index' %}"><img src="{% static 'images/hilcor-logo.png' %}" alt=""></a>
 						</div>
-
+					
 					<!-- Nav -->
 						<nav id="nav">
 							<ul>
 								<li><a href="{% url 'index' %}">Inicio</a></li>
 								<li><a href="{% url 'us' %}">Nosotros</a></li>
-								<li class="active"><a href="{% url 'our_products' %}">Productos</a></li>
+								<li><a href="{% url 'our_products' %}">Productos</a></li>
 								<li><a href="{% url 'contact' %}">Contacto</a></li>
-								<li><a href="{% url 'consult' %}">Consultar</a></li>
+								<li class="active"><a href="{% url 'consult' %}">Consultar</a></li>
 							</ul>
 						</nav>
 	
@@ -58,44 +56,40 @@
 
 	<!-- Main -->
 		<div id="main">
-			<div class="container" align="center">
-				<header>
-					<h2>Solicitar Cotización </h2>
-				</header>
-				{% if error_message %}
-					<p>
-						<strong>
-							{{ error_message }}
-						</strong>
-					</p>
-				{% endif %}
-				<form method="POST" role="form" class="">
-					<div class="col-md-6">
-						{% csrf_token %}
-			            {{ form | bootstrap }}
-		        	</div>
-		        	<div class="col-md-6">
-						{{ product_formset.management_form }}
-						{% for form in product_formset %}
-						  {{ form | bootstrap}}
-						{% endfor %}
-					</div>
-					<a href="{% url 'products' %}">
-						<button style="float:center;" type="button" class="btn btn-secondary">
-							<i class="fa fa-times" aria-hidden="true"></i> 
-							Cancelar
-						</button>
-					</a>
+		
+			<div class="container">
 
-				    <button style="float:center;" type="submit" class="btn btn-danger">
-						<i class="fa fa-plus" aria-hidden="true"></i> 
-						Solicitar Cotización
-					</button>
+				<div class="row" align="center">
 
-		    	</form>
+					<section class="container">
+					    <div class="login">
+					      <h1>Consultar Cotizaciones o Pedidos</h1>
+					      <h4>Ingrese el número de seguimiento de su Cotización/Pedido</h4>
+					      <br>
+					      <br>
+							<form method="POST" role="form" class="form-horizontal">
+									<div class="col-md-6">
+										{% csrf_token %}
+							            {{ form | bootstrap_horizontal }}
+						        	</div>
+						        	{% if error_message %}
+										<strong style='color:red;'>
+										{{ error_message }} <br><br>
+										</strong>
+									{% endif %}
+								    <button style="float:center;" type="submit" class="btn btn-danger">
+										<i class="fa fa-search" aria-hidden="true"></i> 
+										Consultar
+									</button>
+		    				</form>
+					    </div>
+					  </section>
+				</div>
+
 			</div>
 		</div>
-	<!-- Main -->
+	<!-- /Main -->
+
 	<!-- Copyright -->
 		<div id="copyright">
 			<div class="container">

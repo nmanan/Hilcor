@@ -1,0 +1,203 @@
+{% load static %}
+{% load bootstrap %}
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Consultas | Hilandería Hilcor</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<link href='http://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900' rel='stylesheet' type='text/css'>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="{% static 'js/skel.min.js' %}"></script>
+		<script src="{% static 'js/skel-panels.min.js' %}"></script>
+		<script src="{% static 'js/init.js' %}"></script>
+		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/style-desktop.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+		<script src="{% static 'js/bootstrap.js' %}"></script>
+	</head>
+	<body>
+
+	<div id="header-wrapper">
+
+		<!-- Header -->
+			<div id="header">
+				<div class="container">
+						
+					<!-- Logo -->
+						<div id="logo">
+							<a href="{% url 'index' %}"><img src="{% static 'images/hilcor-logo.png' %}" alt=""></a>
+						</div>
+					
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li><a href="{% url 'index' %}">Inicio</a></li>
+								<li><a href="{% url 'us' %}">Nosotros</a></li>
+								<li><a href="{% url 'our_products' %}">Productos</a></li>
+								<li><a href="{% url 'contact' %}">Contacto</a></li>
+								<li class="active"><a href="{% url 'consult' %}">Consultar</a></li>
+							</ul>
+						</nav>
+	
+				</div>
+			</div>
+		<!-- Header -->
+
+		<!-- Banner -->
+			<div id="banner">
+				<div class="container">
+				</div>
+			</div>
+		<!-- /Banner -->
+
+	</div>
+
+	<!-- Main -->
+		<div id="main">
+		
+			<div class="container">
+				<h1>Cotización/Pedido Número: {{quote.number}}.</h1>
+				<br>
+				<div class="row">
+					<div class='col-md-6'>
+						<h2>Datos del Cliente:</h2>
+					      <p> 
+					      	<b>Estado:</b> 
+					      	{% if quote.status == 'P' %}
+					      		Pendiente.
+					      	{% elif quote.status == 'A' %}
+					      		Activo.
+					      	{% elif quote.status == 'E' %}
+					      		Procesando.
+					      	{% elif quote.status == 'C' %}
+					      		Cancelado.
+					      	{% else %}
+					      		Terminado.
+					      	{% endif %}
+					      </p>
+					      <p> 
+					      	<b>Fecha de Solicitud: </b> {{quote.request_date}}
+					      </p>
+					      <p> 
+					      	<b>Empresa: </b> {{quote.company}}
+					      </p>
+					      <p> 
+					      	<b>Persona de Contacto: </b> {{quote.contact}}
+					      </p>
+					      <p> 
+					      	<b>Dirección: </b> {{quote.address}}
+					      </p>
+					      <p> 
+					      	<b>Teléfono: </b> {{quote.phone}}
+					      </p>
+					      <p> 
+					      	<b>Correo Electrónico: </b> {{quote.email}}
+					      </p>
+					</div>
+					<div class='col-md-6'>
+						<h2>Productos Solicitados:</h2>
+						<hr>
+						{% for product in products %}
+							<p>
+								<b>Producto: </b> {{product.product}}
+ 							</p>
+ 							<p>
+								<b>Cantidad: </b> {{product.quantity}} {{product.measure}}
+ 							</p>
+							{% if quote.status != 'P'%}
+							 <p>
+								<b>Precio P/{{product.measure}}: </b> {{product.price_p_u}}
+ 							</p>
+ 							 <p>
+								<b>Precio Total: </b> {{product.total_price}}
+ 							</p>
+							{% endif %}
+							<hr>
+						{% endfor %}
+					</div>
+				</div>
+				<hr><br>
+				<div class='row'>
+				{% if quote.status != 'P'%}
+					<p>
+						<b>Subtotal: </b> {{quote.subtotal}}
+					</p>
+					<br>
+					<p>
+						<b>IVA ({{quote.iva}}%): </b> {{quote.total_iva}}<br>
+					</p>
+					<p>
+						<b>Total a Pagar: </b> {{quote.total}}<br>
+					</p>
+					<p>
+						<b>Comentarios: </b> {{quote.comment}}<br>
+					</p>
+					{% endif %}
+					</div>
+				<hr><br>					
+				<div align='center'>
+				{% if quote.status == 'P' %}
+			      		<p>Su cotización está a la espera de ser procesada por nuestro equipo de administración.
+			      		</p>
+			    {% elif quote.status == 'A' and not has_po %}
+			      		<p>Su cotización está a la espera de la Orden de Compra para ser facturada.</p>
+			    {% elif quote.status == 'E' %}
+			      		<p>Su pedido está siendo procesado en fábrica.</p>
+			    {% elif quote.status == 'C' %}
+			      		<p>Esta cotización ya no es válida.Por favor solicite una nueva cotización.</p>
+			    {%  elif quote.status == 'T' %}
+			      		<p>Este pedido ya ha sido terminado.</p>
+			    {% endif %}
+			    </div>
+				<div align='center'>
+				{% if quote.status == 'A' and not has_po %}
+				<form method="POST" role="form" class="form-horizontal" enctype="multipart/form-data">
+						<div class="col-md-6">
+							{% csrf_token %}
+				            {{ form_po | bootstrap }}
+			        	</div>
+			        	{% if error_message %}
+							<strong style='color:red;'>
+							{{ error_message }} <br><br>
+							</strong>
+						{% endif %}
+					    <button style="float:center;" type="submit" class="btn btn-danger">
+							<i class="fa fa-upload" aria-hidden="true"></i> 
+							Enviar
+						</button>
+				</form>
+				{% elif quote.status == 'A' and has_po %}
+					<p>
+						Su Orden de Compra ha sido enviada. Pronto recibirá un correo electrónico con la factura para este pedido.
+					</p>
+					<a href="{% url 'download' form_po.po_file %}">
+						<button style="float:center;" class="btn btn-danger">
+							<i class="fa fa-download" aria-hidden="true"></i> 
+								Descargar Orden de Compra
+						</button>
+					</a>
+			    {% endif %}
+			    </div>
+			</div>
+		</div>
+	<!-- /Main -->
+
+	<!-- Copyright -->
+		<div id="copyright">
+			<div class="container">
+				{% if user.is_authenticated %}
+					<a href="{% url 'dashboard' %}"> Administración </a>  | 
+					<a href="{% url 'logout' %}">Cerrar Sesión</a>
+				{%else%}
+					<a href="{% url 'access' %}"> Iniciar Sesión </a> 
+				{% endif %}
+				<p></p>
+				<p>
+					Copyright © 2017 | Hilandería Hilcor C.A.  RIF: J-29395972-1. Avenida Los Pioneros, Edficio Hilcor. Zona Industrial de Araure, estado Portuguesa. Teléfonos 664.51.08 /621.58.78. Email hilanderia.hilcor@hotmail.com
+				</p>
+			</div>
+		</div>
+	</body>
+</html>
