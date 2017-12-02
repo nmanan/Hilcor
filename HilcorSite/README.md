@@ -1,21 +1,17 @@
 # Pendientes:
 
 ------------------
-Verificar datos del Pago
+Generar Reportes
+Agregar Notificaciones
 Hacer el PopUp de aprobar factura con la fecha de entrega
-Visualizar Factura en Navegador
+Enviar Correos al Admin
 ------------------
-Generar Facturas y Cotizaciones en PDF
-Agregar Factura y Cotizacion en PDF a los Vorreos
+Arreglar visualización de los correos.
 ------------------
 Arreglar en el Formulario la palabra Producto y PaymentType
 Autocompletar los campos en la facturacion
 Hacer los campos de los precios totales
 Restringir los tipos de archivos de carga
-Acomodar el @login_required
-------------------
-Generar Reportes
-Agregar Notificaciones
 ------------------
 Agregar Formulario de Contacto
 Agregar Nosotros

@@ -1,0 +1,110 @@
+{% load static %}
+{% load bootstrap %}
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Ver Factura | Hilandería Hilcor</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+		<style>
+			@media print {
+			  .hide-print {
+			    display: none;
+			  }
+			}
+		</style>
+	</head>
+	<body>
+
+	<!-- Main -->
+		<div class="main" style="margin: 50px; padding: 10px; max-width: 700px">
+			<header>
+				<div class="row">
+					<table border="0">
+					  <tr>
+					  	<td>
+							<img src="{% static 'images/hilcor-logo.png' %}" alt="" style='height:120px'>
+							<p style='text-align:center;'>
+								<b>HILANDERÍA HILCOR C.A.</b><br>
+								<b>RIF.  J-29395972-1</b>
+						</td>
+					    <td>
+							Avenida Los Pioneros, Edficio Hilcor. <br>
+							Zona Industrial de Araure, estado Portuguesa. <br>
+							Teléfonos 664.51.08 /621.58.78. <br>
+							Correo-e: hilanderia.hilcor@hotmail.com
+					    </td>
+					  </tr>
+					</table>
+				</div>
+			</header>
+			<h2 style='text-align:center;'> FACTURA PROFORMA </h2>
+			<div class="row" style="margin-top: 25px">
+					<table border="0">
+					  <tr>
+					  	<td>
+							<p>
+								<b>RAZÓN SOCIAL: </b> {{ invoice.business_name }}<br>
+								<b>DOMICILIO FISCAL: </b> {{ invoice.address }}<br>
+								<b>RIF: </b> {{ invoice.rif }}<br>
+								<b>TELÉFONO: </b> {{ invoice.phone }}<br>
+							</p>
+						</td>
+					    <td style="padding-left: 70px;">
+							<p>
+								<b>FACTURA: </b> {{ invoice.number }}<br>
+								<b>FECHA: </b> {{ invoice.date }}<br>
+							</p>
+					    </td>
+					  </tr>
+					</table>
+			</div>
+			<div class="row" style="margin-top: 25px">
+					<table border="1" cellpadding="10" style='width:100%'>
+					  <tr>
+					  	<th>CÓDIGO</th>
+					  	<th>Nº DE ORDEN</th>
+					  	<th>DESCRIPCIÓN</th>
+					  	<th>PESO NETO</th>
+					  	<th>P/U</th>
+					  	<th>PRECIO TOTAL</th>
+					  </tr>
+					  {% for product in products %}
+					  <tr>
+					  	<td>{{ product.code }}</td>
+					    <td>{{ product.order_number }}</td>
+					    <td>{{ product.product }}</td>
+					    <td>{{ product.quantity }}</td>
+					    <td>{{ product.price_p_u }}</td>
+					    <td>{{ product.total_price }}</td>
+					  </tr>
+					  {% endfor %}
+					</table>
+					<div style='text-align:right; width:100%; margin-top:10px;'>
+					  	<p style="margin-bottom:0;">
+					  		<b>SUBTOTAL: </b><span style="margin-left: 10px;">{{invoice.subtotal}}</span>
+					  	</p>
+					  	<p style="margin-bottom:0;">
+					  		<b>IVA ({{invoice.iva}}%):</b>
+					  		<span style="margin-left: 10px;">{{invoice.total_iva}}</span>
+					  	</p>
+					  	<p style="margin-bottom:0;">
+					  		<b>TOTAL: </b><span style="margin-left: 10px;">{{invoice.total }}</span>
+					  	</p>
+					</div>
+			</div>
+			<center>
+				<button type="button" class="btn btn-danger hide-print" onclick="print_page(this)">
+					<i class="fa fa-print" aria-hidden="true"></i> Imprimir 
+				</button>
+			</center>
+			<script>
+			function print_page() {
+			    window.print();
+			}
+			</script>
+		</div>
+	</body>
+</html>

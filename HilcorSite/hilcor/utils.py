@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-from datetime           import datetime
-from django.core.mail   import send_mail
-from dateutil.parser    import parse
-from hilcor.models      import *
+from datetime               import datetime
+from django.core.mail       import send_mail
+from dateutil.parser        import parse
+from hilcor.models          import *
+from io                     import BytesIO
+from django.http            import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf              import pisa
+
 
 ################################################################################
 #                                  FUNCTIONS                                   #
@@ -46,5 +51,15 @@ def invoice_sent(invoice):
     )
 
 
-def get_supervisers(activity):
-    pass
+################################################################################
+#                                     EMAIL                                    #
+################################################################################
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html     = template.render(context_dict)
+    result   = BytesIO()
+    pdf      = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None

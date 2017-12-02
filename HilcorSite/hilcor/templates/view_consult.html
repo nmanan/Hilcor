@@ -3,7 +3,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Consultas | Hilandería Hilcor</title>
+		<title>Consulta de Cotización {{quote.number}} | Hilandería Hilcor</title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
@@ -16,6 +16,13 @@
 		<link rel="stylesheet" href="{% static 'css/style-desktop.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
 		<script src="{% static 'js/bootstrap.js' %}"></script>
+		<script language="javascript" type="text/javascript">
+			function popitup(url) {
+			    newwindow=window.open(url,'{{title}}','width=750px, height=750px');
+			    if (window.focus) {newwindow.focus()}
+			    return false;
+			}
+		</script>
 	</head>
 	<body>
 
@@ -121,37 +128,84 @@
 				<div class='row'>
 				{% if quote.status != 'P'%}
 					<p>
-						<b>Subtotal: </b> {{quote.subtotal}}
-					</p>
-					<br>
-					<p>
-						<b>IVA ({{quote.iva}}%): </b> {{quote.total_iva}}<br>
-					</p>
-					<p>
 						<b>Total a Pagar: </b> {{quote.total}}<br>
 					</p>
 					<p>
 						<b>Comentarios: </b> {{quote.comment}}<br>
 					</p>
-					{% endif %}
-					</div>
-				<hr class="hr-red"><br>					
+				{% endif %}
+				{% if quote.status == 'A'%}
+					<h2>Métodos de Pago</h2>
+						<table class="table">
+							<thead>
+							  <tr>
+							      <th>Banco</th>
+							      <th>Nº Cuenta</th>
+							      <th>Tipo de Cuenta</th>
+							      <th>Cheque</th>
+							      <th>Transferencia</th>
+							      <th>Depósito</th>
+							      <th>A Nombre De:</th>
+							    </tr>
+							</thead>
+						  <tbody>
+							{% for payment in payments %}
+							 <tr>
+							      <td> {{payment.bank}}</td>
+							      <td> {{payment.account}}</td>
+							      {% if payment.acc_type == 'C' %}
+							      	<td> Corriente </td>
+							      {% endif%}
+								   <td>
+							      	{% if payment.check %}
+							      		<i class="fa fa-check" aria-hidden="true"></i>
+							        {% else %}
+							      		<i class="fa fa-times" aria-hidden="true"></i>
+							      	{% endif %}
+							      	</td>
+							      	<td>
+							      	{% if payment.transfer %}
+							      		<i class="fa fa-check" aria-hidden="true"></i>
+							        {% else %}
+							      		<i class="fa fa-times" aria-hidden="true"></i>
+							      	{% endif %}
+							      	</td>
+							      	<td>
+							      	{% if payment.deposit %}
+							      		<i class="fa fa-check" aria-hidden="true"></i>
+							        {% else %}
+							      		<i class="fa fa-times" aria-hidden="true"></i>
+							      	{% endif %}
+							      	</td>
+							      	<td>{{payment.acc_name}}</td>
+							    </tr>
+							{% endfor %}
+							</tbody>
+						</table>
+				{% endif %}
+					</div>				
 				<div align='center'>
-				{% if quote.status == 'P' %}
-			      		<p>Su cotización está a la espera de ser procesada por nuestro equipo de administración.
-			      		</p>
-			    {% elif quote.status == 'A' and not has_po %}
-			      		<p>Su cotización está a la espera de la Orden de Compra para ser facturada.</p>
-			    {% elif quote.status == 'E' %}
-			      		<p>Su pedido está a la espera de los datos de pago para ser procesado en fábrica.</p>
-			    {% elif quote.status == 'C' %}
-			      		<p>Esta cotización ya no es válida.Por favor solicite una nueva cotización.</p>
-			    {%  elif quote.status == 'T' %}
-			      		<p>Este pedido ya ha sido terminado.</p>
-			    {% endif %}
+				<div class="quote-status">
+					{% if quote.status == 'P' %}
+				      		<p>Su cotización está a la espera de ser procesada por nuestro equipo de administración.
+				      		</p>
+				    {% elif quote.status == 'A' and not has_po %}
+				      		<p>Su cotización está a la espera de la Orden de Compra. 
+				      		Para procesar su pedido, por favor suba la Orden de Compra correspondiente.</p>
+				    {% elif quote.status == 'E'  and not has_vouchers %}
+				      		<p>Su pedido está a la espera de sus Comprobantes de Pago para ser facturado.</p>
+				    {% elif quote.status == 'E' and has_vouchers %}
+				      		<p>Su pedido está siendo procesado y facturado.</p>
+				    {% elif quote.status == 'C' %}
+				      		<p>Esta cotización ya no es válida. Por favor solicite una nueva cotización.</p>
+				    {%  elif quote.status == 'T' %}
+				      		<p>Este pedido ya ha sido terminado, usted puede imprimir su Factura Proforma y retirar el pedido en nuestros almacenes.</p>
+				    {% endif %}
+				</div>
 			    </div>
 				<div align='center'>
 				{% if quote.status == 'A' and not has_po %}
+				<h2>Órden de Compra</h2>
 				<form method="POST" role="form" class="form-horizontal" enctype="multipart/form-data">
 						<div class="col-md-6">
 							{% csrf_token %}
@@ -168,9 +222,10 @@
 							Enviar
 						</button>
 				</form>
-				{% elif quote.status == 'A' and has_po %}
+				{% elif quote.status == 'E' and has_po %}
+				<h2>Órden de Compra</h2>
 					<p>
-						Su Orden de Compra ha sido enviada. Pronto recibirá un correo electrónico con la factura para este pedido.
+						Su Pedido ya posee una Orden de Compra.
 					</p>
 					<a href="{% url 'download' form_po.po_file %}">
 						<button style="float:center;" class="btn btn-danger">
@@ -178,32 +233,29 @@
 								Descargar Orden de Compra
 						</button>
 					</a>
-			    {% endif %}
-			    {% if quote.status == 'E' and has_po and has_in %}
-					<p>
-						Para finalizar su pedido y generar una fecha de entrega, por favor suba el/los comprobante(s) de pago correspondientes a la factura Nº {{invoice.number}}
-					</p>
-					<a href="{% url 'download' form_po.po_file %}">
-						<button style="float:center;" class="btn btn-danger">
-							<i class="fa fa-download" aria-hidden="true"></i> 
-								Descargar Orden de Compra
-						</button>
-					</a>
-
-					{% if has_in %}
-						<a href="{% url 'download' form_po.po_file %}">
-							<button style="float:center;" class="btn btn-danger">
-								<i class="fa fa-eye" aria-hidden="true"></i> 
-									Ver Factura
-							</button>
-						</a>
-					{% endif %}
-			    {% endif %}
-			    {% if quote.status == 'E' and has_in %}
-			    <hr class="hr-red"><br>
+				    <hr class="hr-red"><br>
 					<h2>Comprobantes de Pago</h2>
-
-					{% if vouchers %}
+					{% if not vouchers %}
+					<p>
+						Para finalizar su pedido y generar una fecha de entrega, por favor suba el/los comprobante(s) de pago correspondientes a la cotización Nº {{quote}}
+					</p>
+					<form method="POST" role="form" class="form-horizontal" enctype="multipart/form-data">
+						<div class="col-md-6">
+							{% csrf_token %}
+					        {{ form_vo | bootstrap }}
+				        </div>
+				        	{% if error_message %}
+								<strong style='color:red;'>
+								{{ error_message }} <br><br>
+								</strong>
+							{% endif %}
+							<button style="float:center;" type="submit" class="btn btn-danger" name="VO"
+						    	    onclick="return confirm('¿Está seguro que desea enviar este dato de pago?')">
+								<i class="fa fa-upload" aria-hidden="true"></i> 
+								Enviar
+							</button>
+					</form>
+					{% else %}
 						<p> Este pedido tiene los siguientes comprobantes de pago asociados:</p>
 						<table class="table">
 						  <tbody>
@@ -227,26 +279,39 @@
 							{% endfor %}
 							</tbody>
 						</table>
-					{% endif %}
 
-					<h5>Subir nuevos comprobantes de pago</h5>
-					<form method="POST" role="form" class="form-horizontal" enctype="multipart/form-data">
-						<div class="col-md-6">
-							{% csrf_token %}
-				            {{ form_vo | bootstrap }}
-			        	</div>
-			        	{% if error_message %}
-							<strong style='color:red;'>
-							{{ error_message }} <br><br>
-							</strong>
+
+						<h5>Subir nuevos comprobantes de pago</h5>
+						<form method="POST" role="form" class="form-horizontal" enctype="multipart/form-data">
+							<div class="col-md-6">
+								{% csrf_token %}
+						        {{ form_vo | bootstrap }}
+				        	</div>
+				        	{% if error_message %}
+								<strong style='color:red;'>
+								{{ error_message }} <br><br>
+								</strong>
+							{% endif %}
+
+							<button style="float:center;" type="submit" class="btn btn-danger" name="VO"
+						    	    onclick="return confirm('¿Está seguro que desea enviar este dato de pago?')">
+								<i class="fa fa-upload" aria-hidden="true"></i> 
+								Enviar
+							</button>
+						</form>
+
+					{% endif %}
+					{% endif %}
+				    {% if quote.status == 'T' and has_in %}
+						{% if has_in %}
+							<a href="#" onclick="return popitup('/invoices/view/{{ invoice.id }}')">
+								<button style="float:center;" class="btn btn-danger">
+									<i class="fa fa-eye" aria-hidden="true"></i> 
+										Ver Factura
+								</button>
+							</a>
 						{% endif %}
-					    <button style="float:center;" type="submit" class="btn btn-danger" name="VO"
-					    	    onclick="return confirm('¿Está seguro que desea enviar este dato de pago?')">
-							<i class="fa fa-upload" aria-hidden="true"></i> 
-							Enviar
-						</button>
-					</form>
-			    {% endif %}
+				    {% endif %}
 			    </div>
 			</div>
 		</div>

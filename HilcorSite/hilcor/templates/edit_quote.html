@@ -28,7 +28,7 @@
 						
 					<!-- Logo -->
 						<div id="logo">
-							<a href="{% url 'index' %}"><img src="{% static 'images/hilcor-logo.png' %}" alt=""></a>
+							<a href="{% url 'dashboard' %}"><img src="{% static 'images/hilcor-logo.png' %}" alt=""></a>
 						</div>
 					
 					
@@ -80,10 +80,10 @@
 						</section>
 					</div>
 				
-					<div class="9u skel-cell-important">
+					<div class="5u skel-cell-important">
 						<section>
 							<header>
-								<h2>Procesar Cotización </h2>
+								<h4>Procesar Cotización</h4>
 							</header>
 							{% if error_message %}
 								<p>
@@ -93,27 +93,43 @@
 								</p>
 							{% endif %}
 
-								<form method="POST" role="form" class="post-form">
-									{% csrf_token %}
-						            {{ form | bootstrap_horizontal  }}
+							<form method="POST" role="form" class="post-form">
+								{% csrf_token %}
+						        {{ form | bootstrap }}
+						    	
+					</div>
+					<div class="4u skel-cell-important">
+						<section>
+							<header>
+								<h4>Productos Solicitados</h4>
+							</header>
+							{% if error_message %}
+								<p>
+									<strong>
+										{{ error_message }}
+									</strong>
+								</p>
+							{% endif %}
 
-									{{ product_formset.management_form }}
-									{% for form in product_formset %}
-									  {{ form | bootstrap_horizontal  }}
-									{% endfor %}
-			
-								    <button style="float:right;" type="submit" class="btn btn-danger">
-										<i class="fa fa-plus" aria-hidden="true"></i> 
-										Guardar Cotización
-									</button>
+							{{ product_formset.management_form }}
+							{% for form in product_formset %}
+							  {{ form | bootstrap  }}
+							{% endfor %}
 
-									<a href="{% url 'quotes' %}">
-										<button style="float:right;" type="button" class="btn btn-secondary">
-											<i class="fa fa-times" aria-hidden="true"></i> 
-											Cancelar
-										</button>
-									</a>
-						    	</form>
+						    <button style="float:right;" type="submit" class="btn btn-danger">
+								<i class="fa fa-plus" aria-hidden="true"></i> 
+								Guardar Cotización
+							</button>
+
+							<a href="{% url 'quotes' %}">
+								<button style="float:right;" type="button" class="btn btn-secondary">
+									<i class="fa fa-times" aria-hidden="true"></i> 
+									Cancelar
+								</button>
+							</a>
+						</div>
+			    	</form>
+
 					</div>
 					
 				</div>

@@ -29,9 +29,11 @@ urlpatterns = [
 	url(r'^invoices/edit/(?P<id>[0-9]+)/$', views.edit_invoice, name='edit_invoice'),
 	url(r'^invoices/send/(?P<id>[0-9]+)/$', views.send_invoice, name='send_invoice'),
 	url(r'^invoices/cancel/(?P<id>[0-9]+)/$', views.cancel_invoice, name='cancel_invoice'),
+	url(r'^invoices/view/(?P<id>[0-9]+)/$', views.view_invoice, name='view_invoice'),
 	url(r'^paymenttypes/$', views.payment_types , name='payment_types'),
 	url(r'^paymenttypes/add/$', views.add_payment_type , name='add_payment_type'),
 	url(r'^paymenttypes/edit/(?P<id>[0-9]+)/$', views.edit_payment_type, name='edit_payment_type'),
+	url(r'^vouchers/view/(?P<id>[0-9]+)/$', views.view_payments, name='view_payments'),
 	url(r'^reports/$', views.reports, name='reports'),
 	url(r'^download/(?P<file_name>.+)$', views.download, name='download'),
 ]

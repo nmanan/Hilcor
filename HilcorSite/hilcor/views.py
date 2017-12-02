@@ -9,8 +9,9 @@ from hilcor.models import *
 from hilcor.forms  import *
 from hilcor.utils  import *
 from datetime      import datetime
+from django_xhtml2pdf.utils import generate_pdf
 
-# Create your views here.
+
 def index(request):
     product_list = Product.objects.all()[:3]
     template = loader.get_template('index.html')
@@ -199,7 +200,7 @@ def edit_quote(request, id):
     initial_products = []
     for product in products:
         initial_products.append(
-            {"product" : product.product, "quantity" : product.quantity, "measure" :product.measure, 
+            {"product" : product.product, "quantity" : product.quantity,
              "price_p_u" :product.price_p_u,"total_price" : product.total_price}
             )
 
@@ -222,13 +223,11 @@ def edit_quote(request, id):
                 if product_form.is_valid() and product_form.has_changed():
                     product = product_form.cleaned_data.get('product', product_form.initial['product'])
                     quantity = product_form.cleaned_data.get('quantity', product_form.initial['quantity'])
-                    measure = product_form.cleaned_data.get('measure', product_form.initial['measure'])
                     price_p_u = product_form.cleaned_data.get('price_p_u', product_form.initial['price_p_u'])
                     total_price = product_form.cleaned_data.get('total_price', product_form.initial['total_price'])
 
                     prod_obj = ProductInQuote.objects.get(product = product, quote = quote)
                     prod_obj.quantity = quantity
-                    prod_obj.measure = measure
                     prod_obj.price_p_u = price_p_u
                     prod_obj.total_price = total_price
                     prod_obj.save()
@@ -310,18 +309,23 @@ def view_consult(request, id):
         po_file = FormAddPurchaseOrder(prefix='PO')
         has_po  = False
 
+    payments   = PaymentType.objects.filter(enabled=True)
+
     # Loading Purchase invoice (if any)
     invoice = Invoice.objects.filter(quote = quote)
     if invoice.exists():
         invoice = invoice[0]
         has_in  = True
 
-        vouchers   = Payment.objects.filter(invoice=invoice)
-
     else:
         invoice  = None
         has_in   = False
-        vouchers = False
+
+    vouchers   = Payment.objects.filter(quote=quote)
+    if vouchers.exists():
+        has_vouchers = True
+    else:
+        has_vouchers = False
 
     form_vo = FormPayment(prefix='VO')
 
@@ -333,12 +337,13 @@ def view_consult(request, id):
                 file_ob = form.save()
                 file_ob.quote = quote
                 file_ob.save()
+                quote.status ='E'
+                quote.save()
         if 'VO' in request.POST:
-            print('HIEE')
             form = FormPayment(request.POST, request.FILES, prefix='VO')
             if form.is_valid():
                 file_ob = form.save()
-                file_ob.invoice = invoice
+                file_ob.quote = quote
                 file_ob.save()
 
         return HttpResponseRedirect('/consult/%i/'%(quote.id))
@@ -354,14 +359,16 @@ def view_consult(request, id):
         'has_po'   : has_po,
         'invoice'  : invoice,
         'has_in'   : has_in,
+        'has_vouchers' : has_vouchers,
         'vouchers' : vouchers,
+        'payments' : payments,
         'form_vo'  : form_vo
     }
     return HttpResponse(template.render(context, request))
 
 @login_required
 def payment_orders(request):
-    paymentorders = PurchaseOrder.objects.filter(quote__status = 'A') 
+    paymentorders = PurchaseOrder.objects.filter(quote__status = 'E') 
     template = loader.get_template('paymentorders.html')
     context  = {
         'Greetings': 'Bienvenido',
@@ -391,7 +398,7 @@ def create_invoice(request, id):
         if quote.company != '':
             business_name = quote.company
         else:
-            quote.company = contact
+            business_name = quote.contact
 
         invoice = Invoice.objects.create(quote = quote, 
                                          number = get_invoice_number(), 
@@ -411,7 +418,6 @@ def edit_invoice(request, id):
         initial_products.append(
             {"product" : product.product,
              "quantity" : product.quantity, 
-             "measure" :product.measure, 
              "price_p_u" :product.price_p_u,
              "total_price" : product.total_price,
              "code" : product.code,
@@ -438,7 +444,6 @@ def edit_invoice(request, id):
 
                     product = product_form.cleaned_data.get('product', '')
                     quantity = product_form.cleaned_data.get('quantity', '')
-                    measure = product_form.cleaned_data.get('measure', '')
                     price_p_u = product_form.cleaned_data.get('price_p_u', '')
                     total_price = product_form.cleaned_data.get('total_price', '')
                     code = product_form.cleaned_data.get('code', '')
@@ -448,7 +453,6 @@ def edit_invoice(request, id):
                     if prod_obj.exists():
                         prod_obj = prod_obj[0]
                         prod_obj.quantity = quantity
-                        prod_obj.measure = measure
                         prod_obj.price_p_u = price_p_u
                         prod_obj.total_price = total_price
                         prod_obj.code = code
@@ -460,7 +464,6 @@ def edit_invoice(request, id):
                             product=product, 
                             order_number=order_number,
                             quantity = quantity,
-                            measure = measure,
                             price_p_u = price_p_u,
                             total_price = total_price,
                             code = code
@@ -477,7 +480,7 @@ def edit_invoice(request, id):
 
 @login_required
 def cancel_invoice(request, id):
-    invoice    = Invoices.objects.get(id = id)
+    invoice    = Invoice.objects.get(id = id)
     invoice.status = 'C'
     invoice.save()
     return HttpResponseRedirect('/invoices/')
@@ -485,14 +488,33 @@ def cancel_invoice(request, id):
 @login_required
 def send_invoice(request, id):
     quote        = Quote.objects.get(id = id)
-    quote.status = 'E'
+    quote.status = 'T'
     quote.save()
 
     invoice        = Invoice.objects.get(quote = quote)
-    invoice.status = 'P'
+    invoice.status = 'Pa'
     invoice.save()
     invoice_sent(invoice.id)
     return HttpResponseRedirect('/invoices/')
+
+def view_invoice(request, id):
+    invoice    = Invoice.objects.get(id = id)
+    template = loader.get_template('view_invoice.html')
+    products = ProductInInvoice.objects.filter(invoice=invoice)
+    context  = {
+        'invoice'  :  invoice,
+        'products' : products
+    }
+    return HttpResponse(template.render(context, request))
+
+@login_required 
+def view_payments(request, id):
+    vouchers = Payment.objects.filter(quote=id)
+    template = loader.get_template('view_vouchers.html')
+    context  = {
+        'vouchers'  :  vouchers
+    }
+    return HttpResponse(template.render(context, request))
 
 @login_required
 def payment_types(request):
