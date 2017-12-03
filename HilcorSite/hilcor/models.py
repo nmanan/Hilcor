@@ -80,7 +80,7 @@ class Invoice(models.Model):
 
     comment       = models.TextField(blank=True, default = '', verbose_name="Comentarios")
     status        = models.CharField(max_length=3, choices=status_list, blank=False, default = 'B', verbose_name="Estado")
-
+    deliver_date  = models.DateField(null=True, blank=True, verbose_name="Fecha de Entrega/Retiro *")
 
     def __unicode__(self):
         return u'%s' % (self.number)
@@ -88,7 +88,7 @@ class Invoice(models.Model):
 class ProductInInvoice(models.Model):
 
     invoice      = models.ForeignKey(Invoice, null=True, on_delete = models.CASCADE)
-    product      = models.ForeignKey(Product, null=True, on_delete = models.SET_NULL, verbose_name=Product._meta.verbose_name_plural)
+    product      = models.ForeignKey(Product, null=True, on_delete = models.SET_NULL, verbose_name="Producto *")
     quantity     = models.PositiveIntegerField(verbose_name="Cantidad (Kg) * ")
     price_p_u    = models.FloatField(blank=False, default=0.00, validators=[MinValueValidator(0.00, "Precio por unidad debe ser mayor a %(limit_value)s")], verbose_name="Precio por Unidad (Kg) *")
     total_price  = models.FloatField(blank=False, default=0.00, validators=[MinValueValidator(0.00, "Precio total debe ser mayor a %(limit_value)s")], verbose_name="Precio Total")

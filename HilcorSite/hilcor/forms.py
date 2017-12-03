@@ -21,6 +21,8 @@ class FormRequestProductInQuote(forms.ModelForm):
         super(FormRequestProductInQuote, self).__init__(*args, **kwargs)
         self.fields['product'].required = True
         self.fields['quantity'].required = True 
+        self.fields['product'].label = "Producto *"    
+        self.fields['product'].empty_label = "Seleccione..."    
 
 
     class Meta:
@@ -49,6 +51,8 @@ class FormEditProductInQuote(forms.ModelForm):
         super(FormEditProductInQuote, self).__init__(*args, **kwargs)
         for key in self.fields:
             self.fields[key].required = True 
+        self.fields['product'].label = "Producto *"    
+        self.fields['product'].empty_label = "Seleccione..."    
 
     class Meta:
         model  = ProductInQuote
@@ -70,7 +74,10 @@ class FormInvoice(forms.ModelForm):
         
     class Meta:
         model = Invoice
-        fields = ("number", "business_name", "address", "rif", "phone", "subtotal" ,"iva" ,"total_iva" ,"total", "status", 'comment')
+        fields = ("number", "business_name", "address", "rif", "phone", "subtotal" ,"iva" ,"total_iva" ,"total", "status", 'comment','deliver_date')
+        widgets = {
+            'deliver_date': forms.DateInput(attrs={'class':'datepicker'}),
+        }
 
 class FormEditProductInInvoice(forms.ModelForm):
     product = forms.ModelChoiceField(queryset=Product.objects.filter(availability = True))
@@ -79,6 +86,8 @@ class FormEditProductInInvoice(forms.ModelForm):
         super(FormEditProductInInvoice, self).__init__(*args, **kwargs)
         for key in self.fields:
             self.fields[key].required = True 
+        self.fields['product'].label = "Producto *"   
+        self.fields['product'].empty_label = "Seleccione..."         
 
     class Meta:
         model  = ProductInInvoice 
@@ -90,6 +99,11 @@ class FormPaymentType(forms.ModelForm):
         fields = ("bank", "acc_type", "account", "check", "transfer","deposit", "acc_name", "enabled")
 
 class FormPayment(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(FormPayment, self).__init__(*args, **kwargs)
+        self.fields['PaymentType'].label = "Método de Pago *"
+        self.fields['PaymentType'].empty_label = "Seleccione..."    
 
     class Meta:
         model  = Payment

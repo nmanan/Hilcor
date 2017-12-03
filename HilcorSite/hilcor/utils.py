@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from datetime               import datetime
-from django.core.mail       import send_mail
+from django.core.mail       import send_mail, EmailMultiAlternatives
 from dateutil.parser        import parse
 from hilcor.models          import *
 from io                     import BytesIO
 from django.http            import HttpResponse
-from django.template.loader import get_template
-from xhtml2pdf              import pisa
+from django.template.loader import get_template, render_to_string
+from django.utils.html      import strip_tags
 
 
 ################################################################################
@@ -29,37 +29,17 @@ def get_invoice_number():
 ################################################################################
 def successfully_sent_quote(quote):
     quote  = Quote.objects.get(id = quote)
-    send_mail(
-        '[Hilcor] Su cotizacion ha sido enviada.',
-        'Saludos, '+ quote.contact +'. Su cotizacion ha sido enviada satisfactoriamente.\n' +
-        'Usted puede revisar el estado de su cotizacion en el area de consultas ingresando el numero: \n' + str(quote.number),
-        'noeply@hilcor.com',
-        [quote.email],
-        fail_silently=False,
-    )
+    html_content = render_to_string('emails/successfully_sent_quote.html', {'quote': quote})
+    text_content = strip_tags(html_content) 
+    msg = EmailMultiAlternatives('[Hilcor] Su cotizacion ha sido enviada.', text_content, 'noeply@hilcor.com', [quote.email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
 
 def invoice_sent(invoice):
     invoice  = Invoice.objects.get(id = invoice)
-    send_mail(
-        '[Hilcor] Su factura esta lista.',
-        'Saludos, '+ invoice.business_name +'. Su factura asociada a la cotizacion ' + str(invoice.quote.number) + ' ya se encuentra disponible.\n' +
-        'Numero de Factura: \n' +str(invoice.number) + '.\n' +
-        'Usted puede descargar la factura en el area de consultas usando el numero de su cotizacion.',
-        'noeply@hilcor.com',
-        [invoice.quote.email],
-        fail_silently=False,
-    )
-
-
-################################################################################
-#                                     EMAIL                                    #
-################################################################################
-
-def render_to_pdf(template_src, context_dict={}):
-    template = get_template(template_src)
-    html     = template.render(context_dict)
-    result   = BytesIO()
-    pdf      = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-    if not pdf.err:
-        return HttpResponse(result.getvalue(), content_type='application/pdf')
-    return None
+    html_content = render_to_string('emails/invoice_sent.html', {'invoice': invoice})
+    text_content = strip_tags(html_content) 
+    msg = EmailMultiAlternatives('[Hilcor] Su factura esta lista.', text_content, 'noeply@hilcor.com', [invoice. quote.email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
