@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts    import render
-from django.http         import HttpResponse, HttpResponseRedirect
-from django.template     import loader
+from django.contrib.auth            import authenticate, login, logout
+from django.shortcuts               import render
+from django.http                    import HttpResponse, HttpResponseRedirect
+from django.template                import loader
 from django.contrib.auth.decorators import login_required
-from django.forms.formsets import formset_factory
-from hilcor.models import *
-from hilcor.forms  import *
-from hilcor.utils  import *
-from datetime      import datetime
-from django_xhtml2pdf.utils import generate_pdf
+from django.forms.formsets          import formset_factory
+from hilcor.models                  import *
+from hilcor.forms                   import *
+from hilcor.utils                   import *
+from datetime                       import datetime, date, timedelta
+from django_xhtml2pdf.utils         import generate_pdf
+from django.db.models               import Sum
+
+import calendar
+import json
+import numpy as np
 
 
 def index(request):
@@ -568,7 +573,96 @@ def edit_payment_type(request, id):
 @login_required
 def reports(request):
     template = loader.get_template('reports.html')
+
+    # Cotizaciones Por Mes
+    today = datetime.today()
+
+    initial_date = date(today.year, today.month, 1)
+
+    date_lists = [initial_date]
+
+    for i in range(11):
+        alter_date = date_lists[0] - timedelta(days=1)
+        alter_date = date(alter_date.year, alter_date.month, 1)
+        date_lists = [alter_date] + date_lists
+
+
+    quote_data = []
+
+    # Getting queries for quotes betweetn dates
+    for i in range(len(date_lists)):
+        if i != len(date_lists) - 1:
+            count = Quote.objects.filter(request_date__range=[date_lists[i], date_lists[i+1]]).count()
+            quote_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+        else:
+            count = Quote.objects.filter(request_date__range=[date_lists[i], today]).count()
+            quote_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+
+    invoice_data = []
+
+    # Getting queries for quotes betweetn dates
+    for i in range(len(date_lists)):
+        if i != len(date_lists) - 1:
+            count = Invoice.objects.filter(date__range=[date_lists[i], date_lists[i+1]], status='Pa').count()
+            invoice_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+        else:
+            count = Invoice.objects.filter(date__range=[date_lists[i], today], status='Pa').count()
+            invoice_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+
+    incomes_data = []
+
+    # Getting queries for quotes betweetn dates
+    for i in range(len(date_lists)):
+        if i != len(date_lists) - 1:
+            count = Invoice.objects.filter(date__range=[date_lists[i], date_lists[i+1]], status='Pa').aggregate(Sum('total'))
+            if count['total__sum']:
+                count = count['total__sum']
+            else:
+                count = 0
+            incomes_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+        else:
+            count = Invoice.objects.filter(date__range=[date_lists[i], today], status='Pa').aggregate(Sum('total'))
+            if count['total__sum']:
+                count = count['total__sum']
+            else:
+                count = 0
+            incomes_data.append([str(calendar.month_abbr[date_lists[i].month]) + ' ' + str(date_lists[i].year), count])
+
+    products_data = []
+    products = Product.objects.all()
+    for product in products:
+        product_data = []
+        for i in range(len(date_lists)):
+            if i != len(date_lists) - 1:
+                count = ProductInInvoice.objects.filter(product = product, invoice__status='Pa', invoice__date__range=[date_lists[i], date_lists[i+1]]).aggregate(Sum('quantity'))
+                if count['quantity__sum']:
+                    count = count['quantity__sum']
+                else:
+                    count = 0
+                product_data.append(count)
+            else:
+                count = ProductInInvoice.objects.filter(product = product, invoice__status='Pa', invoice__date__range=[date_lists[i], today]).aggregate(Sum('quantity'))
+                if count['quantity__sum']:
+                    count = count['quantity__sum']
+                else:
+                    count = 0
+                product_data.append(count)
+
+        products_data.append([product.name, product_data])
+
+    sum_products_data = []
+    for data in products_data:
+        sum_products_data.append([data[0], np.sum(data[1])])
+
     context = {
-        'Greetings': 'Bienvenido',
+        'Greetings'  : 'Bienvenido',
+        'quote_data' : quote_data,
+        'json_quote_data' : json.dumps(quote_data),
+        'invoice_data' : invoice_data,
+        'json_invoice_data' : json.dumps(invoice_data),
+        'incomes_data' : incomes_data,
+        'json_incomes_data' : json.dumps(incomes_data),
+        'products_data' : products_data,
+        'json_products_data' : json.dumps(sum_products_data)
     }
     return HttpResponse(template.render(context, request))

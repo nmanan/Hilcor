@@ -82,58 +82,223 @@
 					<div class="9u skel-cell-important">
 						<section>
 							<header>
-								<h2>Cotizaciones </h2>
-								<span>Consultar, llenar y enviar cotizaciones para pedidos de productos.</span>
+								<h2>Reportes</h2>
+								<span>
+									Consulte acá algunos de los reportes asociados a las cotizaciones y ventas facturadas dentro del sistema.
+								</span>
 							</header>
+
+							<!-- cotizaciones  -->
+
+							<h2>Cotizaciones por Mes</h2>
+							<br>
 							<table class="table table-bordered">
 							  <thead>
 							    <tr>
-							      <th>Fecha Solicitud</th>
-							      <th>Empresa</th>
-							      <th>Persona de Contacto</th>
-							      <th>Teléfono</th>
-							      <th>Procesar</th>
-							      <th>Enviar</th>
-							      <th>Cancelar</th>
+							      {% for quote in quote_data %}
+							      	<th>{{quote.0}}</th>
+							      {% endfor %}
 							    </tr>
 							  </thead>
 							  <tbody>
-								{% if quote_list %}
-								    {% for quote in quote_list %}
-								    <tr>
-								      <td>{{ quote.request_date }}</td>
-								      <td>{{ quote.company }}</td>
-								      <td>{{ quote.contact }}</td>
-								      <td>{{ quote.phone }}</td>
-								      <td>
-								      	<a href="{% url 'edit_quote' quote.id %}">
-								      		<i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-								      	</a>
-								      </td>
-								      <td>
-										<a href="{% url 'send_quote' quote.id %}"
-								      	   onclick="return confirm('¿Está seguro que desea enviar esta cotización?')">
-								      		<i class="fa fa-arrow-right" aria-hidden="true"></i>
-								      	</a>
-								      </td>
-								      <td>
-								      	<a href="{% url 'cancel_quote' quote.id %}"
-								      	   onclick="return confirm('¿Está seguro que desea cancelar esta cotización?')">
-								      		<i class="fa fa-ban" aria-hidden="true"></i>
-								      	</a>
-								      </td>
-								    </tr>
-								    {% endfor %}
-								{% else %}
-								    <tr><td>No hay cotizaciones disponibles.</td></tr>
-								{% endif %}
+							  	  {% for quote in quote_data %}
+							      	<td>{{quote.1}}</td>
+							      {% endfor %}
 							  </tbody>
 							</table>
+
+							<br>
+
+							<center>
+								<div id="quotes_div_graph"></div>
+							</center>
+
+							<hr class="hr-red">
+
+							<!-- facturas -->
+
+							<h2>Facturas por Mes</h2>
+							<br>
+							<table class="table table-bordered">
+							  <thead>
+							    <tr>
+							      {% for invoice in invoice_data %}
+							      	<th>{{invoice.0}}</th>
+							      {% endfor %}
+							    </tr>
+							  </thead>
+							  <tbody>
+							  	  {% for invoice in invoice_data %}
+							      	<td>{{invoice.1}}</td>
+							      {% endfor %}
+							  </tbody>
+							</table>
+
+							<br>
+
+							<center>
+								<div id="invoices_div_graph"></div>
+							</center>
+
+							<hr class="hr-red">
+
+							<!-- ingresos -->
+
+							<h2>Ingresos por Mes (Bs.)</h2>
+							<br>
+							<table class="table table-bordered">
+							  <thead>
+							    <tr>
+							      {% for income in incomes_data %}
+							      	<th>{{income.0}}</th>
+							      {% endfor %}
+							    </tr>
+							  </thead>
+							  <tbody>
+							  	  {% for income in incomes_data %}
+							      	<td>{{income.1}}</td>
+							      {% endfor %}
+							  </tbody>
+							</table>
+
+							<br>
+
+							<center>
+								<div id="incomes_div_graph"></div>
+							</center>
+
+							<hr class="hr-red">
+
+							<!-- productos -->
+
+							<h2>Volumen de Ventas por Producto (Kg)</h2>
+							<br>
+							<table class="table table-bordered">
+							  <thead>
+							    <tr>
+							      <th>Producto</th>
+							      {% for income in incomes_data %}
+							      	<th>{{income.0}}</th>
+							      {% endfor %}
+							    </tr>
+							  </thead>
+							  <tbody>
+							  	  {% for product in products_data %}
+							  	  	<tr>
+								      	<td>{{product.0}}</td>
+								      	{% for data in product.1 %}
+								      		<td>{{data}}</td>
+								      	{% endfor %}
+								        {% endfor %}
+								    </tr>
+							  </tbody>
+							</table>
+
+							<br>
+
+							<center>
+								<div id="products_div_graph"></div>
+							</center>
+
+							<hr class="hr-red">
 						</section>
 					</div>
 					
 				</div>
 			</div>
+		</div>
+
+		<div>
+			   <!--Load the AJAX API-->
+			    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+			    <script type="text/javascript">
+
+			      // Load the Visualization API and the corechart package.
+			      google.charts.load('current', {'packages':['corechart']});
+
+			      // Set a callback to run when the Google Visualization API is loaded.
+			      google.charts.setOnLoadCallback(drawChartQuote);
+			      google.charts.setOnLoadCallback(drawChartInvoice);
+			      google.charts.setOnLoadCallback(drawChartIncomes);
+			      google.charts.setOnLoadCallback(drawChartProducts);
+
+			      // Callback that creates and populates a data table,
+			      // instantiates the pie chart, passes in the data and
+			      // draws it.
+			      function drawChartQuote() {
+
+			        // Create the data table.
+			        var data = new google.visualization.DataTable();
+			        data.addColumn('string', 'Mes');
+			        data.addColumn('number', 'Cotizaciones');
+			        data.addRows({{ json_quote_data | safe }});
+
+			        // Set chart options
+			        var options = {'title':'Cotizaciones durante el último año',
+			                       'width':750,
+			                       'height':500};
+
+			        // Instantiate and draw our chart, passing in some options.
+			        var chart = new google.visualization.ColumnChart(document.getElementById('quotes_div_graph'));
+			        chart.draw(data, options);
+			      }
+
+
+			      function drawChartInvoice() {
+
+			        // Create the data table.
+			        var data = new google.visualization.DataTable();
+			        data.addColumn('string', 'Mes');
+			        data.addColumn('number', 'Facturas');
+			        data.addRows({{ json_invoice_data | safe }});
+
+			        // Set chart options
+			        var options = {'title':'Facturas durante el último año',
+			                       'width':750,
+			                       'height':500};
+
+			        // Instantiate and draw our chart, passing in some options.
+			        var chart = new google.visualization.ColumnChart(document.getElementById('invoices_div_graph'));
+			        chart.draw(data, options);
+			      }
+
+			      	function drawChartIncomes() {
+
+			        // Create the data table.
+			        var data = new google.visualization.DataTable();
+			        data.addColumn('string', 'Mes');
+			        data.addColumn('number', 'Ingresos (Bs)');
+			        data.addRows({{ json_incomes_data | safe }});
+
+			        // Set chart options
+			        var options = {'title':'Ingresos durante el último año',
+			                       'width':750,
+			                       'height':500};
+
+			        // Instantiate and draw our chart, passing in some options.
+			        var chart = new google.visualization.ColumnChart(document.getElementById('incomes_div_graph'));
+			        chart.draw(data, options);
+			      }
+
+			      function drawChartProducts() {
+
+			        // Create the data table.
+			        var data = new google.visualization.DataTable();
+			        data.addColumn('string', 'Producto');
+			        data.addColumn('number', 'Volumen en Kg.');
+			        data.addRows({{ json_products_data | safe }});
+
+			        // Set chart options
+			        var options = {'title':'Volumen de ventas por producto durante el último año',
+			                       'width':750,
+			                       'height':500};
+
+			        // Instantiate and draw our chart, passing in some options.
+			        var chart = new google.visualization.PieChart(document.getElementById('products_div_graph'));
+			        chart.draw(data, options);
+			      }
+
+			    </script>
 		</div>
 	<!-- Main -->
 	<!-- Copyright -->
