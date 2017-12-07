@@ -205,17 +205,19 @@ def edit_quote(request, id):
             )
 
     number_products = len(products)
-    print(number_products)
     FormsetEditProductInQuote = formset_factory(FormEditProductInQuote, max_num = number_products)
 
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
+
+        print('HIEE')
         # create a form instance and populate it with data from the request:
         form = FormEditQuote(request.POST, instance = quote)
         product_formset = FormsetEditProductInQuote(request.POST, initial=initial_products)
         # check whether it's valid:
         if form.is_valid() and product_formset.is_valid():
 
+            print('HIEE2')
             quote = form.save(commit=False)
             quote.answer_date = datetime.today()
             quote.save()
@@ -239,7 +241,7 @@ def edit_quote(request, id):
         form = FormEditQuote(instance = quote)
         product_formset = FormsetEditProductInQuote(initial = initial_products)
 
-    return render(request, 'edit_quote.html', {'form': form, 'product_formset' : product_formset })
+    return render(request, 'edit_quote.html', {'form': form, 'product_formset' : product_formset, 'number_products' : number_products })
 
 @login_required
 def cancel_quote(request, id):
@@ -412,6 +414,7 @@ def create_invoice(request, id):
 def edit_invoice(request, id):
     invoice    = Invoice.objects.get(id = id)
     products   = ProductInInvoice.objects.filter(invoice=invoice)
+    productinq = ProductInQuote.objects.filter(quote=invoice.quote)
 
     initial_products = []
     for product in products:
@@ -419,12 +422,10 @@ def edit_invoice(request, id):
             {"product" : product.product,
              "quantity" : product.quantity, 
              "price_p_u" :product.price_p_u,
-             "total_price" : product.total_price,
-             "code" : product.code,
-             "order_number" : product.order_number}
+             "total_price" : product.total_price}
             )
 
-    number_products = len(products) + 2
+    number_products = len(productinq) + 2
     FormsetEditProductInInvoice = formset_factory(FormEditProductInInvoice, extra = number_products, max_num = number_products)
 
     # if this is a POST request we need to process the form data
@@ -476,7 +477,7 @@ def edit_invoice(request, id):
         form = FormInvoice(instance = invoice)
         product_formset = FormsetEditProductInInvoice(initial = initial_products)
 
-    return render(request, 'edit_invoice.html', {'form': form, 'invoice' : invoice, 'product_formset' : product_formset})
+    return render(request, 'edit_invoice.html', {'form': form, 'invoice' : invoice, 'product_formset' : product_formset, 'number_products' : number_products})
 
 @login_required
 def cancel_invoice(request, id):

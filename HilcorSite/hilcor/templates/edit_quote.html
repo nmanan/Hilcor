@@ -17,6 +17,57 @@
 		<link rel="stylesheet" href="{% static 'css/style.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/style-desktop.css' %}" />
 		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+
+		<script>
+			function update_prize_ppu(e) {
+    			var id    = e.id;
+    			var value = e.value;
+
+    			var numb = id.match(/\d/g);
+				numb = numb.join("");
+
+				var quantity_id = 'id_form-' + numb + '-quantity';
+				var price_id    = 'id_form-' + numb + '-total_price';
+
+				var quantity = document.getElementById(quantity_id).value;
+
+				var total_price = value * quantity;
+				document.getElementById(price_id).value = total_price;
+
+				update_total_price();
+			}
+
+			function update_prize_q(e) {
+    			var id    = e.id;
+    			var value = e.value;
+
+    			var numb = id.match(/\d/g);
+				numb = numb.join("");
+
+				var price_pu_id = 'id_form-' + numb + '-price_p_u';
+				var price_id    = 'id_form-' + numb + '-total_price';
+
+				var price_pu = document.getElementById(price_pu_id).value;
+
+				var total_price = value * price_pu;
+				document.getElementById(price_id).value = total_price;
+
+				update_total_price();
+			}
+
+			function update_total_price() {
+				var number_products = document.getElementById('number_products_hidden').textContent;
+				var total = 0;
+				for (i = 0; i < number_products; i++) { 
+				    var price_id  = 'id_form-' + i + '-total_price';
+				    var price     = document.getElementById(price_id).value;
+				    total = total + parseFloat(price);
+				}
+
+				document.getElementById('id_total').value = total;
+			}
+
+		</script>
 	</head>
 	<body>
 
@@ -111,9 +162,13 @@
 								</p>
 							{% endif %}
 
+							<!-- <imput id='number_products_hidden' type='hidden' value='{{number_products}}'> -->
+							<div style="display: none;" id="number_products_hidden">{{number_products}}</div>
+
 							{{ product_formset.management_form }}
 							{% for form in product_formset %}
 							  {{ form | bootstrap  }}
+							  <hr class="hr-red">
 							{% endfor %}
 
 						    <button style="float:right;" type="submit" class="btn btn-danger">

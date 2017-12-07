@@ -39,6 +39,8 @@ class FormEditQuote(forms.ModelForm):
         self.fields['contact'].widget.attrs['readonly'] = True
         self.fields['phone'].widget.attrs['readonly'] = True
         self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['total'].widget.attrs['readonly'] = True
+
 
     class Meta:
         model = Quote
@@ -52,7 +54,11 @@ class FormEditProductInQuote(forms.ModelForm):
         for key in self.fields:
             self.fields[key].required = True 
         self.fields['product'].label = "Producto *"    
-        self.fields['product'].empty_label = "Seleccione..."    
+        self.fields['product'].empty_label = "Seleccione..." 
+        self.fields['product'].widget.attrs['readonly'] = True
+        self.fields['total_price'].widget.attrs['readonly'] = True
+        self.fields['quantity'].widget.attrs['onkeyup']  = "update_prize_q(this);"  
+        self.fields['price_p_u'].widget.attrs['onkeyup']  = "update_prize_ppu(this);"    
 
     class Meta:
         model  = ProductInQuote
@@ -71,6 +77,10 @@ class FormInvoice(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FormInvoice, self).__init__(*args, **kwargs)
         self.fields['number'].widget.attrs['readonly'] = True
+        self.fields['subtotal'].widget.attrs['readonly'] = True
+        self.fields['total_iva'].widget.attrs['readonly'] = True
+        self.fields['total'].widget.attrs['readonly'] = True
+        self.fields['iva'].widget.attrs['onkeyup']  = "update_iva(this);"
         
     class Meta:
         model = Invoice
@@ -88,6 +98,9 @@ class FormEditProductInInvoice(forms.ModelForm):
             self.fields[key].required = True 
         self.fields['product'].label = "Producto *"   
         self.fields['product'].empty_label = "Seleccione..."         
+        self.fields['total_price'].widget.attrs['readonly'] = True
+        self.fields['quantity'].widget.attrs['onkeyup']  = "update_prize_q(this);"  
+        self.fields['price_p_u'].widget.attrs['onkeyup'] = "update_prize_ppu(this);"   
 
     class Meta:
         model  = ProductInInvoice 
