@@ -1,8 +1,5 @@
 # Pendientes:
-
 ------------------
-Generar Reportes
-Agregar Notificaciones
 Enviar Correos al Admin.
 ------------------
 Agregar Formulario de Contacto

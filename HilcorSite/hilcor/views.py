@@ -83,7 +83,18 @@ def log_out(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'dashboard.html', {})
+    quotes = Quote.objects.filter(status='P')
+    n_quotes = quotes.count()
+    po = PurchaseOrder.objects.filter(quote__status = 'E') 
+    n_po = po.count()
+    context = {
+        'quotes' : quotes,
+        'n_quotes' : n_quotes,
+        'po': po,
+        'n_po': n_po,
+    }
+
+    return render(request, 'dashboard.html', context)
 
 @login_required
 def products(request):
